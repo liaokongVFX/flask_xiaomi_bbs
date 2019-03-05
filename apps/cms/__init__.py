@@ -3,5 +3,5 @@
 # Author  : LiaoKong
 
 from .Views import bp
-
+import apps.cms.Hooks
 

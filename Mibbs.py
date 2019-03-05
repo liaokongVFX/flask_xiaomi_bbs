@@ -3,6 +3,7 @@
 # Author  : LiaoKong
 
 from flask import Flask
+from flask_wtf import CSRFProtect
 
 from apps.cms import bp as cms_bp
 from apps.front import bp as front_bp
@@ -21,6 +22,7 @@ def create_app():
     app.register_blueprint(common_bp)
 
     db.init_app(app)
+    CSRFProtect(app)
 
     return app
 
