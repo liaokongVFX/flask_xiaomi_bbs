@@ -5,7 +5,7 @@
 from flask import session, g
 
 from .Views import bp
-from .Models import CMSUser
+from .Models import CMSUser, CMSPermission
 
 import Config
 
@@ -18,3 +18,8 @@ def before_request():
 
         if user:
             g.cms_user = user
+
+
+@bp.context_processor
+def cms_context_processor():
+    return {"CMSPermission": CMSPermission}
