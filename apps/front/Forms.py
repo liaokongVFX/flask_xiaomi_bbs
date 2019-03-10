@@ -42,7 +42,13 @@ class SignupForm(BaseForm):
     def validate_telephone(self, field):
         telephone = field.data
 
-        user_telephone = FrontUser.query.filter_by(telephone=telephone).first()
+        user = FrontUser.query.filter_by(telephone=telephone).first()
 
-        if user_telephone:
+        if user:
             raise ValidationError(message="您所输入的电话已被注册！")
+
+
+class SigninForm(BaseForm):
+    telephone = StringField(validators=[regexp(r"1[345789]\d{9}", message="请输入正确格式的手机号码")])
+    password = StringField(validators=[regexp(r"[0-9a-zA-Z_\.]{6,20}", message="请输入正确格式的密码")])
+    remember = StringField()
