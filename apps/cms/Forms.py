@@ -42,3 +42,14 @@ class ResetEmailForm(BaseForm):
 
         if user.email == email:
             raise ValidationError("不能修改为相同的邮箱！")
+
+
+class AddBannerForm(BaseForm):
+    name = StringField(validators=[InputRequired(message="请输入轮播图名称")])
+    image_url = StringField(validators=[InputRequired(message="请输入轮播图链接")])
+    link_url = StringField(validators=[InputRequired(message="请输入轮播图跳转链接")])
+    priority = IntegerField(validators=[InputRequired(message="请输入轮播图优先级")])
+
+
+class UpdateBannerForm(AddBannerForm):
+    banner_id = IntegerField(validators=[InputRequired(message="请输入轮播图id")])

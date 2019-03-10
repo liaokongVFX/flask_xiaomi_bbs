@@ -10,6 +10,7 @@ from Exts import db
 
 from apps.cms import Models as cms_models
 from apps.front import Models as front_models
+from apps.Models import BannerModel
 
 CMSUser = cms_models.CMSUser
 CMSRole = cms_models.CMSRole

@@ -8,8 +8,9 @@ import random
 from flask import Blueprint, views, render_template, request, session, redirect, url_for, g, jsonify
 from flask_mail import Message
 
-from .Forms import LoginForm, ResetPwdForm, ResetEmailForm
-from .Models import CMSUser,CMSPermission
+from .Forms import LoginForm, ResetPwdForm, ResetEmailForm, AddBannerForm, UpdateBannerForm
+from .Models import CMSUser, CMSPermission
+from ..Models import BannerModel
 from .Decorators import login_required, permission_required
 
 import Config
@@ -101,6 +102,81 @@ def cusers():
 @permission_required(CMSPermission.ALL_PERMISSION)
 def croles():
     return render_template("cms/cms_croles.html")
+
+
+@bp.route("/banners/")
+@login_required
+def banners():
+    banners = BannerModel.query.all()
+    return render_template("cms/cms_banners.html", banners=banners)
+
+
+@bp.route("/abanner/", methods=["POST"])
+@login_required
+def abanner():
+    form = AddBannerForm(request.form)
+
+    if form.validate():
+        name = form.name.data
+        image_url = form.image_url.data
+        link_url = form.link_url.data
+        priority = form.priority.data
+
+        banner = BannerModel(name=name, image_url=image_url, link_url=link_url, priority=priority)
+
+        db.session.add(banner)
+        db.session.commit()
+
+        return restful.success()
+    else:
+        return restful.params_error(form.get_error())
+
+
+@bp.route("/ubanner/", methods=["POST"])
+@login_required
+def ubanner():
+    form1 = UpdateBannerForm(request.form)
+
+    if form1.validate():
+        banner_id = form1.banner_id.data
+        banner = BannerModel.query.get(banner_id)
+
+        name = form1.name.data
+        image_url = form1.image_url.data
+        link_url = form1.link_url.data
+        priority = form1.priority.data
+
+        if banner:
+            banner.name = name
+            banner.image_url = image_url
+            banner.link_url = link_url
+            banner.priority = priority
+
+            db.session.commit()
+
+            return restful.success()
+        else:
+            return restful.params_error("没有这个轮播图！")
+    else:
+        restful.params_error(form1.get_error())
+
+
+@bp.route("/dbanner/", methods=["POST"])
+@login_required
+def dbanner():
+    banner_id = request.form.get("banner_id")
+
+    if not banner_id:
+        return restful.params_error(message="请传入轮播图id")
+
+    banner = BannerModel.query.get(banner_id)
+    if not banner:
+        return restful.params_error(message="没有这个轮播图")
+
+    db.session.delete(banner)
+    db.session.commit()
+
+    return restful.success()
 
 
 class LoginView(views.MethodView):
