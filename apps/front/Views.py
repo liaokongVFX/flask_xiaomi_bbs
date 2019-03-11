@@ -10,13 +10,19 @@ import Config
 
 from .Forms import SignupForm, SigninForm
 from .Models import FrontUser
+from ..Models import BannerModel
 
 bp = Blueprint("front", __name__)
 
 
 @bp.route("/")
 def index():
-    return render_template("front/front_index.html")
+    banners = BannerModel.query.order_by(BannerModel.priority.desc()).limit(4)
+    context = {
+        "banners": banners
+    }
+
+    return render_template("front/front_index.html", **context)
 
 
 class SignupView(views.MethodView):

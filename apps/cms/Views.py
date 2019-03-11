@@ -107,7 +107,7 @@ def croles():
 @bp.route("/banners/")
 @login_required
 def banners():
-    banners = BannerModel.query.all()
+    banners = BannerModel.query.order_by(BannerModel.priority.desc()).all()
     return render_template("cms/cms_banners.html", banners=banners)
 
 

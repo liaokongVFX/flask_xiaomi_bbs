@@ -4,12 +4,15 @@
 
 from io import BytesIO
 
-from flask import Blueprint, request, make_response
+import qiniu
+
+from flask import Blueprint, request, make_response, jsonify
 
 from utils import restful, SmsSender, lkcache
 from utils.captcha import xtcaptcha
 
 from .Forms import SMSCaptchaForm
+from Config import QININ_ACCESS_KEY, QININ_SECRET_KEY, QININ_BUCKET
 
 bp = Blueprint("common", __name__, url_prefix="/c")
 
@@ -62,6 +65,14 @@ def graph_captcha():
     resp = make_response(out.read())
     resp.content_type = "image/png"
     return resp
+
+
+@bp.route("/uptoken/")
+def uptoken():
+    q = qiniu.Auth(QININ_ACCESS_KEY, QININ_SECRET_KEY)
+    token = q.upload_token(QININ_BUCKET)
+
+    return jsonify({"uptoken": token})
 
 
 if __name__ == '__main__':
