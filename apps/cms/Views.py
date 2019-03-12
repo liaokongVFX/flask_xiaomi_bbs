@@ -8,9 +8,10 @@ import random
 from flask import Blueprint, views, render_template, request, session, redirect, url_for, g, jsonify
 from flask_mail import Message
 
-from .Forms import LoginForm, ResetPwdForm, ResetEmailForm, AddBannerForm, UpdateBannerForm
+from .Forms import LoginForm, ResetPwdForm, ResetEmailForm, AddBannerForm, UpdateBannerForm, AddBoardForm, \
+    UpdateBoardFrom
 from .Models import CMSUser, CMSPermission
-from ..Models import BannerModel
+from ..Models import BannerModel, BoardModel
 from .Decorators import login_required, permission_required
 
 import Config
@@ -80,7 +81,68 @@ def comments():
 @login_required
 @permission_required(CMSPermission.BOARDER)
 def boards():
-    return render_template("cms/cms_boards.html")
+    board_models = BoardModel.query.all()
+    context = {
+        "boards": board_models
+    }
+    return render_template("cms/cms_boards.html", **context)
+
+
+@bp.route("/aboard/", methods=["POST"])
+@login_required
+@permission_required(CMSPermission.BOARDER)
+def aboard():
+    form = AddBoardForm(request.form)
+    if form.validate():
+        name = form.name.data
+
+        board = BoardModel(name=name)
+        db.session.add(board)
+        db.session.commit()
+
+        return restful.success()
+
+    else:
+        return restful.params_error(message=form.get_error())
+
+
+@bp.route("/uboard/", methods=["POST"])
+@login_required
+@permission_required(CMSPermission.BOARDER)
+def uboard():
+    form = UpdateBoardFrom(request.form)
+    if form.validate():
+        board_id = form.board_id.data
+        name = form.name.data
+
+        board = BoardModel.query.get(board_id)
+        if board:
+            board.name = name
+            db.session.commit()
+
+            return restful.success()
+        else:
+            return restful.params_error(message="没有这个版块")
+    else:
+        return restful.params_error(message=form.get_error())
+
+
+@bp.route("/dboard/", methods=["POST"])
+@login_required
+@permission_required(CMSPermission.BOARDER)
+def dboard():
+    board_id = request.form.get("board_id")
+    if not board_id:
+        return restful.params_error("请传入版块id")
+
+    board = BoardModel.query.get(board_id)
+    if not board:
+        return restful.params_error(message="没有这个版块")
+
+    db.session.delete(board)
+    db.session.commit()
+
+    return restful.success()
 
 
 @bp.route("/fusers/")

@@ -10,7 +10,7 @@ import Config
 
 from .Forms import SignupForm, SigninForm
 from .Models import FrontUser
-from ..Models import BannerModel
+from ..Models import BannerModel, BoardModel
 
 bp = Blueprint("front", __name__)
 
@@ -18,8 +18,10 @@ bp = Blueprint("front", __name__)
 @bp.route("/")
 def index():
     banners = BannerModel.query.order_by(BannerModel.priority.desc()).limit(4)
+    boards = BoardModel.query.all()
     context = {
-        "banners": banners
+        "banners": banners,
+        "boards": boards
     }
 
     return render_template("front/front_index.html", **context)
