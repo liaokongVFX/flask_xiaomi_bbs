@@ -4,3 +4,4 @@
 
 from .Views import bp
 
+from . import Hooks

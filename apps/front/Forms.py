@@ -2,8 +2,8 @@
 # Time    : 2019/3/4 21:36
 # Author  : LiaoKong
 
-from wtforms import StringField
-from wtforms.validators import EqualTo, regexp, ValidationError
+from wtforms import StringField, IntegerField
+from wtforms.validators import EqualTo, regexp, ValidationError, InputRequired
 
 from utils import lkcache
 
@@ -52,3 +52,9 @@ class SigninForm(BaseForm):
     telephone = StringField(validators=[regexp(r"1[345789]\d{9}", message="请输入正确格式的手机号码")])
     password = StringField(validators=[regexp(r"[0-9a-zA-Z_\.]{6,20}", message="请输入正确格式的密码")])
     remember = StringField()
+
+
+class AddPostForm(BaseForm):
+    title = StringField(validators=[InputRequired(message="请输入标题！")])
+    content = StringField(validators=[InputRequired(message="请输入内容！")])
+    board_id = IntegerField(validators=[InputRequired(message="请输入版块id！")])
