@@ -2,7 +2,7 @@
 # Time    : 2019/3/4 21:30
 # Author  : LiaoKong
 
-from flask import Blueprint, views, render_template, request, session, url_for
+from flask import Blueprint, views, render_template, request, session, url_for, g
 
 from utils import restful, safeutils
 from Exts import db
@@ -12,17 +12,39 @@ from .Forms import SignupForm, SigninForm, AddPostForm
 from .Models import FrontUser
 from ..Models import BannerModel, BoardModel, PostModel
 from .Decorators import login_required
+from flask_paginate import Pagination, get_page_parameter
 
 bp = Blueprint("front", __name__)
 
 
 @bp.route("/")
 def index():
+    board_id = request.args.get("bd", type=int, default=None)
+
     banners = BannerModel.query.order_by(BannerModel.priority.desc()).limit(4)
     boards = BoardModel.query.all()
+
+    # 设置分页
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    start = (page - 1) * Config.PER_PAGE
+    end = start + Config.PER_PAGE
+
+    if board_id:
+        query_obj = PostModel.query.filter_by(board_id=board_id)
+        posts = query_obj.slice(start, end)
+        total = query_obj.count()
+    else:
+        posts = PostModel.query.slice(start, end)
+        total = PostModel.query.count()
+
+    pagination = Pagination(bs_version=3, page=page, total=total, outer_window=0, inner_window=2)
+
     context = {
         "banners": banners,
-        "boards": boards
+        "boards": boards,
+        "posts": posts,
+        "pagination": pagination,
+        "current_board": board_id
     }
 
     return render_template("front/front_index.html", **context)
@@ -47,6 +69,8 @@ def apost():
 
             post = PostModel(title=title, content=content)
             post.board = board
+            post.author = g.front_user
+
             db.session.add(post)
             db.session.commit()
 
