@@ -2,7 +2,7 @@
 # Time    : 2019/3/4 21:30
 # Author  : LiaoKong
 
-from flask import Blueprint, views, render_template, request, session, url_for, g
+from flask import Blueprint, views, render_template, request, session, url_for, g, abort
 
 from utils import restful, safeutils
 from Exts import db
@@ -48,6 +48,14 @@ def index():
     }
 
     return render_template("front/front_index.html", **context)
+
+
+@bp.route("/p/<post_id>")
+def post_detail(post_id):
+    post = PostModel.query.get(post_id)
+    if not post:
+        abort(404)
+    return render_template("front/front_pdetail.html", post=post)
 
 
 @bp.route("/apost/", methods=["GET", "POST"])

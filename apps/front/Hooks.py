@@ -2,7 +2,7 @@
 # Time    : 2019/3/13 22:32
 # Author  : LiaoKong
 
-from flask import session, g
+from flask import session, g, render_template
 
 from .Views import bp
 from .Models import FrontUser
@@ -18,3 +18,8 @@ def my_before_request():
 
         if user:
             g.front_user = user
+
+
+@bp.errorhandler
+def page_not_found():
+    return render_template("front/front_404.html"), 404
