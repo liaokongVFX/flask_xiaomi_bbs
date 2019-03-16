@@ -8,9 +8,9 @@ from utils import restful, safeutils
 from Exts import db
 import Config
 
-from .Forms import SignupForm, SigninForm, AddPostForm
+from .Forms import SignupForm, SigninForm, AddPostForm, AddCommentForm
 from .Models import FrontUser
-from ..Models import BannerModel, BoardModel, PostModel
+from ..Models import BannerModel, BoardModel, PostModel, CommentModel
 from .Decorators import login_required
 from flask_paginate import Pagination, get_page_parameter
 
@@ -56,6 +56,30 @@ def post_detail(post_id):
     if not post:
         abort(404)
     return render_template("front/front_pdetail.html", post=post)
+
+
+@bp.route("/acomment/", methods=["POST"])
+@login_required
+def add_comment():
+    form = AddCommentForm(request.form)
+    if form.validate():
+        content = form.content.data
+        post_id = form.post_id.data
+
+        post = PostModel.query.get(post_id)
+        if post:
+            comment = CommentModel(content=content)
+            comment.post = post
+            comment.author = g.front_user
+
+            db.session.add(comment)
+            db.session.commit()
+
+            return restful.success()
+        else:
+            return restful.params_error(message="帖子不存在")
+    else:
+        return restful.params_error(form.get_error())
 
 
 @bp.route("/apost/", methods=["GET", "POST"])
