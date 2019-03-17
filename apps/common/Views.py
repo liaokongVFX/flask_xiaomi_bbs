@@ -14,6 +14,8 @@ from utils.captcha import xtcaptcha
 from .Forms import SMSCaptchaForm
 from Config import QININ_ACCESS_KEY, QININ_SECRET_KEY, QININ_BUCKET
 
+from Tasks import send_sms_captcha
+
 bp = Blueprint("common", __name__, url_prefix="/c")
 
 
@@ -38,15 +40,20 @@ def sms_captcha():
 
         captcha = xtcaptcha.Captcha.gene_text()
         print("发送的短信验证码是 ", captcha)
-        if SmsSender.send(telephone, captcha):
-            # 保存短信验证码
-            lkcache.set(telephone, captcha)
-            return restful.success()
-        else:
-            # fixme 这里仅用作测试,最后要改回下面注销的代码
-            lkcache.set(telephone, captcha)
-            return restful.success()
-            # return restful.params_error(message="短信发送失败！")
+
+        send_sms_captcha(telephone, captcha)
+
+        return restful.success()
+
+        # if SmsSender.send(telephone, captcha):
+        #     # 保存短信验证码
+        #     lkcache.set(telephone, captcha)
+        #     return restful.success()
+        # else:
+        #     # fixme 这里仅用作测试,最后要改回下面注销的代码
+        #     lkcache.set(telephone, captcha)
+        #     return restful.success()
+        # return restful.params_error(message="短信发送失败！")
 
     else:
         return restful.params_error(message="参数错误！")

@@ -1,0 +1,1 @@
+celery -A Tasks.celery worker --pool=solo --loglevel=info

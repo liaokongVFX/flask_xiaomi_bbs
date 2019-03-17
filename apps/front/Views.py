@@ -3,6 +3,8 @@
 # Author  : LiaoKong
 
 from flask import Blueprint, views, render_template, request, session, url_for, g, abort
+from flask_paginate import Pagination, get_page_parameter
+from sqlalchemy.sql import func
 
 from utils import restful, safeutils
 from Exts import db
@@ -10,9 +12,8 @@ import Config
 
 from .Forms import SignupForm, SigninForm, AddPostForm, AddCommentForm
 from .Models import FrontUser
-from ..Models import BannerModel, BoardModel, PostModel, CommentModel
+from ..Models import BannerModel, BoardModel, PostModel, CommentModel, HighlightPostModel
 from .Decorators import login_required
-from flask_paginate import Pagination, get_page_parameter
 
 bp = Blueprint("front", __name__)
 
@@ -20,6 +21,8 @@ bp = Blueprint("front", __name__)
 @bp.route("/")
 def index():
     board_id = request.args.get("bd", type=int, default=None)
+
+    sort = request.args.get("st", type=int, default=1)
 
     banners = BannerModel.query.order_by(BannerModel.priority.desc()).limit(4)
     boards = BoardModel.query.all()
@@ -29,13 +32,28 @@ def index():
     start = (page - 1) * Config.PER_PAGE
     end = start + Config.PER_PAGE
 
+    query_obj = None
+    if sort == 1:
+        query_obj = PostModel.query.order_by(PostModel.create_time.desc())
+    elif sort == 2:
+        # 按加精的时间倒序
+        query_obj = db.session.query(PostModel).outerjoin(HighlightPostModel).order_by(
+            HighlightPostModel.create_time.desc(), PostModel.create_time.desc())
+    elif sort == 3:
+        # 按照点赞的数量倒序
+        query_obj = PostModel.query.order_by(PostModel.create_time.desc())
+    elif sort == 4:
+        # 按照评论数量排序
+        query_obj = db.session.query(PostModel).outerjoin(CommentModel).group_by(PostModel.id).order_by(
+            func.count(CommentModel.id).desc(), PostModel.create_time.desc())
+
     if board_id:
-        query_obj = PostModel.query.filter_by(board_id=board_id)
+        query_obj = query_obj.filter(PostModel.board_id == board_id)
         posts = query_obj.slice(start, end)
         total = query_obj.count()
     else:
-        posts = PostModel.query.slice(start, end)
-        total = PostModel.query.count()
+        posts = query_obj.slice(start, end)
+        total = query_obj.count()
 
     pagination = Pagination(bs_version=3, page=page, total=total, outer_window=0, inner_window=2)
 
@@ -44,7 +62,8 @@ def index():
         "boards": boards,
         "posts": posts,
         "pagination": pagination,
-        "current_board": board_id
+        "current_board": board_id,
+        "current_sort": sort
     }
 
     return render_template("front/front_index.html", **context)
