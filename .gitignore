@@ -1,0 +1,10 @@
+.idea/
+migrations/
+__pycache__/
+apps/__pycache__/
+apps/cms/__pycache__/
+apps/common/__pycache__/
+apps/front/__pycache__/
+utils/__pycache__/
+utils/captcha/__init__.pyc
+utils/captcha/xtcaptcha.pyc
